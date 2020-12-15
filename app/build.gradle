@@ -1,6 +1,8 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-android-extensions'
+
 }
 
 android {
@@ -41,4 +43,8 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation project(path: ':netlibrary')
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    implementation 'com.youth.banner:banner:2.1.0'
+    implementation 'com.github.bumptech.glide:glide:4.11.0'
+
+
 }
