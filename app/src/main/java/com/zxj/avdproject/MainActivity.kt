@@ -1,12 +1,17 @@
 package com.zxj.avdproject
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.youth.banner.indicator.RectangleIndicator
-import com.youth.banner.util.BannerUtils
+import com.lzy.okgo.OkGo
+import com.lzy.okgo.callback.StringCallback
+import com.lzy.okgo.model.Response
+import com.youth.banner.util.LogUtils
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_main.view.*
 import java.util.*
+
+val URLS = "http://47.98.41.154:6578/api/"
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -15,9 +20,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         banner.adapter = ImageNetAdapter(getTestData3())
         banner.setLoopTime(3000)
-//        banner.indicator = RectangleIndicator(this)
-//        banner.setIndicatorSpace(BannerUtils.dp2px(4f).toInt())
-//        banner.setIndicatorRadius(0)
+        getAd()
+        getReportError()
+        getSize()
+        getActive()
+        getIncrease()
+        getAccountToken()
+        getResetNum()
+
+
     }
 
     private fun getTestData3(): List<AvdDataBean> {
@@ -56,4 +67,133 @@ class MainActivity : AppCompatActivity() {
         )
         return list
     }
+
+    //获取广告列表
+    private fun getAd() {
+        OkGo.get<String>("${URLS}${ApiUrls.getAd}").tag(this).execute(object : StringCallback() {
+            override fun onSuccess(response: Response<String>?) {
+                LogUtils.d(response?.body().toString())
+            }
+
+            override fun onError(response: Response<String>?) {
+                super.onError(response)
+                LogUtils.d(response?.body().toString())
+            }
+        })
+    }
+
+    /**
+     * 上报错误
+     */
+    private fun getReportError() {
+        OkGo.post<String>("${URLS}${ApiUrls.reportError}").tag(this).params("content", "测试")
+            .params("errorType", "1").execute(object : StringCallback() {
+                override fun onSuccess(response: Response<String>?) {
+                    LogUtils.d(response?.body().toString())
+                }
+
+                override fun onError(response: Response<String>?) {
+                    super.onError(response)
+                    LogUtils.d(response?.body().toString())
+                }
+            })
+    }
+
+    /**
+     * 重置计量
+     */
+    private fun getResetNum() {
+        OkGo.post<String>("${URLS}${ApiUrls.reportError}").tag(this)
+            .execute(object : StringCallback() {
+                override fun onSuccess(response: Response<String>?) {
+                    LogUtils.d(response?.body().toString())
+                }
+
+                override fun onError(response: Response<String>?) {
+                    super.onError(response)
+                    LogUtils.d(response?.body().toString())
+                }
+            })
+    }
+
+    /**
+     * 根据账户获取token
+     */
+    private fun getAccountToken() {
+        OkGo.post<String>("${URLS}${ApiUrls.accountToken}").tag(this)
+            .params("", "").params("userName", "test001").params("devicePwd", "123456")
+            .execute(object : StringCallback() {
+                override fun onSuccess(response: Response<String>?) {
+                    LogUtils.d(response?.body().toString())
+                }
+
+                override fun onError(response: Response<String>?) {
+                    super.onError(response)
+                    LogUtils.d(response?.body().toString())
+                }
+            })
+    }
+
+    /**
+     * 上报计数
+     */
+    private fun getIncrease() {
+        OkGo.post<String>("${URLS}${ApiUrls.increase}").params("num", "10").tag(this)
+            .execute(object : StringCallback() {
+                override fun onSuccess(response: Response<String>?) {
+                    LogUtils.d(response?.body().toString())
+                }
+
+                override fun onError(response: Response<String>?) {
+                    super.onError(response)
+                    LogUtils.d(response?.body().toString())
+                }
+            })
+    }
+
+    /**
+     * 激活机器
+     */
+    private fun getActive() {
+        OkGo.post<String>("${URLS}${ApiUrls.active}").tag(this)
+            .execute(object : StringCallback() {
+                override fun onSuccess(response: Response<String>?) {
+                    LogUtils.d(response?.body().toString())
+                }
+
+                override fun onError(response: Response<String>?) {
+                    super.onError(response)
+                    LogUtils.d(response?.body().toString())
+                }
+            })
+    }
+
+    /**
+     * 激活机器
+     */
+    fun getSize() {
+        val paramHasp = mutableMapOf<String, String>()
+        paramHasp["deviceCode"] = "XC123n"
+        paramHasp["type"] = "1"
+        paramHasp["address"] = "深圳"
+        paramHasp["sizeId"] = "XC123n"
+        paramHasp["screen"] = "1"
+        paramHasp["inductive"] = "1"
+        paramHasp["scan"] = "1"
+        paramHasp["maxNum"] = "50"
+        OkGo.get<String>("${URLS}${ApiUrls.getSize}").tag(this).params(paramHasp)
+            .execute(object : StringCallback() {
+                override fun onSuccess(response: Response<String>?) {
+                    LogUtils.d(response?.body().toString())
+                }
+
+                override fun onError(response: Response<String>?) {
+                    super.onError(response)
+                    LogUtils.d(response?.body().toString())
+                }
+            })
+
+
+    }
+
 }
