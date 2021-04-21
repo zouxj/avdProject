@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">浮点广告机</string>
+    <string name="no_serial_device">找不到串口设备</string>
+
 </resources>
