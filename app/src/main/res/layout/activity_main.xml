@@ -1,21 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    tools:context=".MainActivity">
 
     <com.youth.banner.Banner
-        android:id="@+id/banner_looper"
-        android:layout_weight="1"
-        android:background="#00ffffff"
+        android:id="@+id/banner"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        tools:ignore="MissingConstraints" />
-    <ImageView
-        android:id="@+id/image_gif"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="match_parent"
         tools:ignore="MissingConstraints" />
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

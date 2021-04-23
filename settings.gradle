@@ -1,4 +1,3 @@
-include ':banner'
 include ':netlibrary'
 include ':app'
 rootProject.name = "AvdProject"
