@@ -25,6 +25,7 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+<<<<<<< HEAD
         banner_looper.adapter = ImageNetAdapter(getTestData3())
         banner_looper.setLoopTime(3000)
         val bf= BufferedReader( FileReader( File("/sys/class/net/wlan0/address"))).readLine();
@@ -32,6 +33,10 @@ class MainActivity : Activity() {
 //        banner.indicator = RectangleIndicator(this)
 //        banner.setIndicatorSpace(BannerUtils.dp2px(4f).toInt())
 //        banner.setIndicatorRadius(0)
+=======
+        banner.adapter = ImageNetAdapter(getTestData3())
+        banner.setLoopTime(3000)
+>>>>>>> parent of ea319b1... 112
         getAd()
         getReportError()
         getSize()
