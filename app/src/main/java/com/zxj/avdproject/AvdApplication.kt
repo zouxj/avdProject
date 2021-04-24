@@ -29,7 +29,6 @@ class AvdApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        //ASF
         initOkGo()
     }
     private fun initOkGo() {

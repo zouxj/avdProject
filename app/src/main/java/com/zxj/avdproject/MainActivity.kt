@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         banner.adapter = ImageNetAdapter(getTestData3())
-        banner.setLoopTime(6000)
+        banner.setLoopTime(3000)
         getAd()
         getReportError()
         getSize()
