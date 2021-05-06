@@ -1,5 +1,6 @@
 package com.zxj.avdproject
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.serialport.SerialPortFinder
@@ -7,14 +8,12 @@ import android.text.TextUtils
 import android.view.KeyEvent
 import android.view.Window
 import android.view.WindowManager
+import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.lzy.okgo.OkGo
 import com.lzy.okgo.callback.StringCallback
 import com.lzy.okgo.model.Response
-import com.shuyu.gsyvideoplayer.GSYVideoManager
-import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer
 import com.youth.banner.listener.OnPageChangeListener
 import com.youth.banner.util.LogUtils
 import com.zxj.avdproject.comn.Device
@@ -24,13 +23,18 @@ import com.zxj.avdproject.comn.util.LogPlus
 import com.zxj.avdproject.comn.util.PrefHelper
 import com.zxj.avdproject.comn.util.ToastUtil
 import com.zxj.avdproject.comn.util.constant.PreferenceKeys
+import com.zxj.avdproject.model.AdBeans
+import com.zxj.avdproject.model.Template
+import com.zxj.avdproject.ui.LoginActivity
+import com.zxj.avdproject.uitls.SharedPreferencesUtils
+import com.zxj.avdproject.uitls.SharedPreferencesUtils.DEVICE_CODE
 import kotlinx.android.synthetic.main.activity_main.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.util.*
 
-val URLS = "http://47.98.41.154:6578/api/"
+val URLS = "https://api.sczn-ssas.com/api/"
 
 
 class MainActivity : AppCompatActivity() {
@@ -38,10 +42,12 @@ class MainActivity : AppCompatActivity() {
     private var mDevices: Array<String>? = null
     private var mDevice: Device? = null
 
-    private var mDeviceIndex = 5
-    private var mBaudrateIndex = 0
+    private var mDeviceIndex = 4
     private val handler = Handler()
-    var player: StandardGSYVideoPlayer? = null
+    private val adList = arrayListOf<Template>()
+    private val mAdapter by lazy {
+        ImageNetAdapter(adList)
+    }
 
     private val task: Runnable = object : Runnable {
         override fun run() {
@@ -54,22 +60,33 @@ class MainActivity : AppCompatActivity() {
     private var mOpened = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if ((SharedPreferencesUtils.getParam(this, DEVICE_CODE, "") as String).isEmpty()
+        ) {
+            startActivity(Intent(this,LoginActivity::class.java))
+            return
+        }
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.activity_main)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-        banner.adapter = ImageNetAdapter(getTestData3())
-        banner.setLoopTime(30000)
-        getAd()
-        getReportError()
-        getSize()
-        getActive()
-        getIncrease()
-        getAccountToken()
-        getResetNum()
+        banner.adapter = mAdapter
+        banner.setLoopTime(3000)
+        setStatus()
+//        getReportError()
+//        getSize()
+//        getActive()
+//        getIncrease()
+//        getResetNum()
         initDevice()
         switchSerialPort()
+        startService(Intent(this,MyService::class.java))
+        startActivity(Intent(this@MainActivity,VideoPlayActivity::class.java))
+
+//        getAccountToken()
+
         handler.postDelayed(task, 30000);//延迟调用
-        Glide.with(this).asGif().load(R.drawable.test_image).into(image_gif)
+        Glide.with(this)
+            .load("https://n.sinaimg.cn/tech/transform/324/w149h175/20210423/5868-kpamyii5341282.gif")
+            .into(image_gif)
         banner.addOnPageChangeListener(object : OnPageChangeListener {
             override fun onPageScrolled(
                 position: Int,
@@ -79,11 +96,9 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPageSelected(position: Int) {
-                val viewHolder: RecyclerView.ViewHolder =
-                    (banner.adapter as ImageNetAdapter).mVHMap.get(position)
-                player?.onVideoPause()
-                player = (viewHolder as? VideoHolder)?.videoView
-                player?.startPlayLogic()
+                if (position==banner.realCount)     {
+                    startActivity(Intent(this@MainActivity,VideoPlayActivity::class.java))
+                }
 
 
             }
@@ -95,17 +110,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        player?.onVideoPause()
     }
 
     override fun onResume() {
         super.onResume()
-        player?.onVideoResume()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        GSYVideoManager.releaseAllVideos()
     }
 
     /**
@@ -122,19 +134,9 @@ class MainActivity : AppCompatActivity() {
             )
         }
         // 波特率
-        mDeviceIndex = PrefHelper.getDefault().getInt(PreferenceKeys.SERIAL_PORT_DEVICES, 4)
-        mDeviceIndex = if (mDeviceIndex >= mDevices!!.size) mDevices!!.size - 1 else mDeviceIndex
-        mBaudrateIndex = PrefHelper.getDefault().getInt(PreferenceKeys.BAUD_RATE, 0)
         mDevice = Device(mDevices?.getOrNull(mDeviceIndex) ?: "", "19200")
     }
 
-    private fun sendData(text: String) {
-        if (TextUtils.isEmpty(text) || text.length % 2 != 0) {
-            ToastUtil.showOne(this, "无效数据")
-            return
-        }
-        SerialPortManager.instance().sendCommand(text)
-    }
 
     /**
      * 打开或关闭串口
@@ -145,11 +147,8 @@ class MainActivity : AppCompatActivity() {
             mOpened = false
         } else {
             // 保存配置
-            PrefHelper.getDefault().saveInt(PreferenceKeys.SERIAL_PORT_DEVICES, mDeviceIndex)
-            PrefHelper.getDefault().saveInt(PreferenceKeys.BAUD_RATE, mBaudrateIndex)
             mOpened = SerialPortManager.instance().open(mDevice) != null
             if (mOpened) {
-                sendData("AAA0AC")
                 ToastUtil.showOne(this, "成功打开串口")
             } else {
                 ToastUtil.showOne(this, "打开串口失败")
@@ -195,18 +194,41 @@ class MainActivity : AppCompatActivity() {
         return list
     }
 
+    //激活
+    private fun setStatus() {
+        OkGo.post<String>("${URLS}${ApiUrls.status}").headers("deviceCode",getDeviceCode()).params("status", "1").tag(this)
+            .execute(object : StringCallback() {
+                override fun onSuccess(response: Response<String>?) {
+                    getAd()
+                    LogUtils.d(response?.body().toString())
+                }
+
+                override fun onError(response: Response<String>?) {
+                    super.onError(response)
+                    LogUtils.d(response?.body().toString())
+                }
+            })
+    }
+    fun getDeviceCode():String{
+        return SharedPreferencesUtils.getParam(this,
+            DEVICE_CODE,"").toString()
+    }
     //获取广告列表
     private fun getAd() {
-        OkGo.get<String>("${URLS}${ApiUrls.getAd}").tag(this).execute(object : StringCallback() {
-            override fun onSuccess(response: Response<String>?) {
-                LogUtils.d(response?.body().toString())
-            }
+        OkGo.get<AdBeans>("${URLS}${ApiUrls.getAd}").headers("deviceCode",getDeviceCode()).tag(this)
+            .execute(object : JsonCallback<AdBeans>() {
+                override fun onSuccess(response: Response<AdBeans>?) {
+                    response?.body()?.payload?.let {
+                        adList.addAll(it)
+                        mAdapter.notifyDataSetChanged()
 
-            override fun onError(response: Response<String>?) {
-                super.onError(response)
-                LogUtils.d(response?.body().toString())
-            }
-        })
+                    }
+
+                    LogUtils.d(response?.body().toString())
+                }
+
+
+            })
     }
 
     /**
@@ -346,5 +368,31 @@ class MainActivity : AppCompatActivity() {
         }
         return super.onKeyDown(keyCode, event)
     }
-
+//    /**
+//     * 系统类错误，4开头
+//     */
+//    const ERROR_CODE_40000 = 40000;     //系统繁忙
+//    const ERROR_CODE_40001 = 40001;     //非法操作
+//    const ERROR_CODE_40002 = 40002;     //缺少参数
+//    const ERROR_CODE_40003 = 40003;     //参数异常
+//    const ERROR_CODE_40004 = 40004;     //数据不存在
+//    const ERROR_CODE_40005 = 40005;     //身份认证失败
+//
+//    /**
+//     * 业务类错误，5开头
+//     */
+//    const ERROR_CODE_50000 = 50000;     //用户名或密码错误
+//    const ERROR_CODE_50001 = 50001;     //账户已禁用
+//    const ERROR_CODE_50002 = 50002;     //登录超时
+//    const ERROR_CODE_50003 = 50003;     //手机已注册
+//    const ERROR_CODE_50004 = 50004;     //渠道不存在
+//    const ERROR_CODE_50005 = 50005;     //机器设备异常
+//    const ERROR_CODE_50006 = 50006;     //计量已满
+//    const ERROR_CODE_50007 = 50007;     //无投放广告
+//    const ERROR_CODE_50008 = 50008;     //机器不存在或未激活
+//    const ERROR_CODE_50009 = 50009;     //订单未支付
+//    const ERROR_CODE_50010 = 50010;     //无待出货订单
+//    const ERROR_CODE_50011 = 50011;     //订单状态异常
+//    const ERROR_CODE_50012 = 50012;     //机器未绑定，请在小程序绑定机器
+//    const ERROR_CODE_50013 = 50013;     //设备不在线
 }

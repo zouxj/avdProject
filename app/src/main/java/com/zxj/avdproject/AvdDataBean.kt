@@ -8,7 +8,8 @@ package com.zxj.avdproject
  */
 data class AvdDataBean(
     var imageRes: Int = 0,
-    var imageUrl: String,
+    var imageUrl: String?="",
+    var videoUrl: String?="",
     var title: String? = null,
     var viewType: Int = 0
 )

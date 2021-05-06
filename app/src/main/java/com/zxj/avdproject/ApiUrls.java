@@ -21,5 +21,13 @@ public interface ApiUrls {
     String getSize = "device/getSize";
     //获取广告
     String getAd = "ad/putAd";
+    //获取出货
+    String  goods="device/goods";
+    //修改机器状态
+    String status="device/status";
+    //注册机器
+    String register="device/register";
+    //设置已经出货
+    String sell= "device/sell";
 
 }
