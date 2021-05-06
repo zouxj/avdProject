@@ -16,7 +16,9 @@ import com.zxj.avdproject.comn.message.IMessage
 import com.zxj.avdproject.comn.util.LogPlus
 import com.zxj.avdproject.comn.util.ToastUtil
 import com.zxj.avdproject.model.AdBeans
+import com.zxj.avdproject.model.GoodSellBean
 import com.zxj.avdproject.uitls.SharedPreferencesUtils
+import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
@@ -24,6 +26,10 @@ import org.greenrobot.eventbus.ThreadMode
 class MyService : Service() {
     private val anHour = 10 * 1000 // 30s更新一次
 
+    override fun onCreate() {
+        super.onCreate()
+        EventBus.getDefault()?.register(this)
+    }
 
     override fun onBind(intent: Intent): IBinder {
         TODO("Return the communication channel to the service.")
@@ -34,7 +40,7 @@ class MyService : Service() {
         val task = Runnable {
             run {
                 LogPlus.i("zouxiujun", "更新了${SystemClock.currentThreadTimeMillis()}")
-                getAd()
+                getGoods()
 
             }
         }
@@ -49,21 +55,36 @@ class MyService : Service() {
 
         return super.onStartCommand(intent, flags, startId)
     }
-    //获取广告列表
-    private fun getAd() {
-        OkGo.get<String>("${URLS}${ApiUrls.goods}").headers("deviceCode",getDeviceCode()).tag(this)
-            .execute(object : StringCallback() {
-                override fun onSuccess(response: Response<String>?) {
-                    sendData("AAA0AC")
 
+    var mGoodSellBean: GoodSellBean? = null
+    private fun getGoods() {
+        OkGo.get<GoodSellBean>("${URLS}${ApiUrls.goods}").headers("deviceCode", getDeviceCode())
+            .tag(this)
+            .execute(object : JsonCallback<GoodSellBean>() {
+                override fun onSuccess(response: Response<GoodSellBean>?) {
+                    if (response?.body()?.success == true && (MainActivity.mOpened)) {
+                        sendData("AAA0AC")
+                        mGoodSellBean = response.body()
+                    }
                 }
-
-
             })
     }
-    fun getDeviceCode():String{
-        return SharedPreferencesUtils.getParam(this,
-            SharedPreferencesUtils.DEVICE_CODE,"").toString()
+
+    private fun setSell() {
+        OkGo.post<String>("${URLS}${ApiUrls.sell}").headers("deviceCode", getDeviceCode())
+            .params("orderId", mGoodSellBean?.payload?.orderId).tag(this)
+            .execute(object : StringCallback() {
+                override fun onSuccess(response: Response<String>?) {
+
+                }
+            })
+    }
+
+    private fun getDeviceCode(): String {
+        return SharedPreferencesUtils.getParam(
+            this,
+            SharedPreferencesUtils.DEVICE_CODE, ""
+        ).toString()
     }
 
     private fun sendData(text: String) {
@@ -71,12 +92,14 @@ class MyService : Service() {
             ToastUtil.showOne(this, "无效数据")
             return
         }
+
         SerialPortManager.instance().sendCommand(text)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(message: IMessage?) {
         // 收到时间，刷新界面
+        setSell()
         LogPlus.i(message?.message)
     }
 }

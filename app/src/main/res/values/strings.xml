@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">浮点广告机</string>
+    <string name="app_name">顺辰传媒</string>
     <string name="no_serial_device">找不到串口设备</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="prompt_email">Email</string>

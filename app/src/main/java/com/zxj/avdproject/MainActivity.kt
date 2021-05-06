@@ -57,7 +57,9 @@ class MainActivity : AppCompatActivity() {
             //需要执行的代码
         }
     }
-    private var mOpened = false
+    companion object {
+        var mOpened = false
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if ((SharedPreferencesUtils.getParam(this, DEVICE_CODE, "") as String).isEmpty()
@@ -79,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         initDevice()
         switchSerialPort()
         startService(Intent(this,MyService::class.java))
-        startActivity(Intent(this@MainActivity,VideoPlayActivity::class.java))
+//        startActivity(Intent(this@MainActivity,VideoPlayActivity::class.java))
 
 //        getAccountToken()
 
@@ -156,43 +158,43 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getTestData3(): List<AvdDataBean> {
-        val list: MutableList<AvdDataBean> = ArrayList()
-        list.add(
-            AvdDataBean(
-                imageUrl = "http://img.zcool.cn/community/013de756fb63036ac7257948747896.jpg",
-                viewType = 1
-            )
-        )
-        list.add(
-            AvdDataBean(
-                imageUrl = "http://img.zcool.cn/community/01639a56fb62ff6ac725794891960d.jpg",
-                viewType = 1
-            )
-        )
-        list.add(
-            AvdDataBean(
-                imageUrl = "http://img.zcool.cn/community/01270156fb62fd6ac72579485aa893.jpg",
-                viewType = 1
-            )
-
-        )
-        list.add(
-            AvdDataBean(
-                imageUrl = "http://img.zcool.cn/community/01233056fb62fe32f875a9447400e1.jpg",
-                viewType = 1
-            )
-
-        )
-        list.add(
-            AvdDataBean(
-
-                videoUrl = "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4",
-                viewType = 2
-            )
-        )
-        return list
-    }
+//    private fun getTestData3(): List<AvdDataBean> {
+//        val list: MutableList<AvdDataBean> = ArrayList()
+//        list.add(
+//            AvdDataBean(
+//                imageUrl = "http://img.zcool.cn/community/013de756fb63036ac7257948747896.jpg",
+//                viewType = 1
+//            )
+//        )
+//        list.add(
+//            AvdDataBean(
+//                imageUrl = "http://img.zcool.cn/community/01639a56fb62ff6ac725794891960d.jpg",
+//                viewType = 1
+//            )
+//        )
+//        list.add(
+//            AvdDataBean(
+//                imageUrl = "http://img.zcool.cn/community/01270156fb62fd6ac72579485aa893.jpg",
+//                viewType = 1
+//            )
+//
+//        )
+//        list.add(
+//            AvdDataBean(
+//                imageUrl = "http://img.zcool.cn/community/01233056fb62fe32f875a9447400e1.jpg",
+//                viewType = 1
+//            )
+//
+//        )
+//        list.add(
+//            AvdDataBean(
+//
+//                videoUrl = "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4",
+//                viewType = 2
+//            )
+//        )
+//        return list
+//    }
 
     //激活
     private fun setStatus() {
