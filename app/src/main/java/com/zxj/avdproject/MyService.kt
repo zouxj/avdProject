@@ -15,7 +15,6 @@ import com.zxj.avdproject.comn.SerialPortManager
 import com.zxj.avdproject.comn.message.IMessage
 import com.zxj.avdproject.comn.util.LogPlus
 import com.zxj.avdproject.comn.util.ToastUtil
-import com.zxj.avdproject.model.AdBeans
 import com.zxj.avdproject.model.GoodSellBean
 import com.zxj.avdproject.uitls.SharedPreferencesUtils
 import org.greenrobot.eventbus.EventBus
@@ -24,7 +23,8 @@ import org.greenrobot.eventbus.ThreadMode
 
 
 class MyService : Service() {
-    private val anHour = 10 * 1000 // 30s更新一次
+    private val anHour = 10 * 1000 // 10s更新一次
+    private val mIntent = Intent("com.zxj.avdproject.RECEIVER")
 
     override fun onCreate() {
         super.onCreate()
@@ -41,7 +41,7 @@ class MyService : Service() {
             run {
                 LogPlus.i("zouxiujun", "更新了${SystemClock.currentThreadTimeMillis()}")
                 getGoods()
-
+                sendBroadcast(mIntent)
             }
         }
         Thread(task).start()
@@ -64,6 +64,7 @@ class MyService : Service() {
                 override fun onSuccess(response: Response<GoodSellBean>?) {
                     if (response?.body()?.success == true && (MainActivity.mOpened)) {
                         sendData("AAA0AC")
+                        getIncrease()
                         mGoodSellBean = response.body()
                     }
                 }
@@ -95,11 +96,27 @@ class MyService : Service() {
 
         SerialPortManager.instance().sendCommand(text)
     }
+    /**
+     * 上报计数
+     */
+    private fun getIncrease() {
+        OkGo.post<String>("${URLS}${ApiUrls.increase}").headers("deviceCode", getDeviceCode()) .params("num", "1").tag(this)
+            .execute(object : StringCallback() {
+                override fun onSuccess(response: Response<String>?) {
+                    LogUtils.d(response?.body().toString())
+                }
 
+                override fun onError(response: Response<String>?) {
+                    super.onError(response)
+                    LogUtils.d(response?.body().toString())
+                }
+            })
+    }
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(message: IMessage?) {
         // 收到时间，刷新界面
         setSell()
+        getIncrease()
         LogPlus.i(message?.message)
     }
 }

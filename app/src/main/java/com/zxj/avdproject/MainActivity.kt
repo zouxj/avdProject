@@ -1,14 +1,15 @@
 package com.zxj.avdproject
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.os.Handler
 import android.serialport.SerialPortFinder
-import android.text.TextUtils
 import android.view.KeyEvent
 import android.view.Window
 import android.view.WindowManager
-import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.lzy.okgo.OkGo
@@ -20,9 +21,7 @@ import com.zxj.avdproject.comn.Device
 import com.zxj.avdproject.comn.SerialPortManager
 import com.zxj.avdproject.comn.message.IMessage
 import com.zxj.avdproject.comn.util.LogPlus
-import com.zxj.avdproject.comn.util.PrefHelper
 import com.zxj.avdproject.comn.util.ToastUtil
-import com.zxj.avdproject.comn.util.constant.PreferenceKeys
 import com.zxj.avdproject.model.AdBeans
 import com.zxj.avdproject.model.Template
 import com.zxj.avdproject.ui.LoginActivity
@@ -32,19 +31,19 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import java.util.*
 
-val URLS = "https://api.sczn-ssas.com/api/"
+const val URLS = "https://api.sczn-ssas.com/api/"
 
 
 class MainActivity : AppCompatActivity() {
 
     private var mDevices: Array<String>? = null
     private var mDevice: Device? = null
-
     private var mDeviceIndex = 4
     private val handler = Handler()
     private val adList = arrayListOf<Template>()
+    private var msgReceiver: MsgReceiver? = null
+
     private val mAdapter by lazy {
         ImageNetAdapter(adList)
     }
@@ -57,14 +56,16 @@ class MainActivity : AppCompatActivity() {
             //需要执行的代码
         }
     }
+
     companion object {
         var mOpened = false
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if ((SharedPreferencesUtils.getParam(this, DEVICE_CODE, "") as String).isEmpty()
         ) {
-            startActivity(Intent(this,LoginActivity::class.java))
+            startActivity(Intent(this, LoginActivity::class.java))
             return
         }
         requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -80,7 +81,7 @@ class MainActivity : AppCompatActivity() {
 //        getResetNum()
         initDevice()
         switchSerialPort()
-        startService(Intent(this,MyService::class.java))
+        startService(Intent(this, MyService::class.java))
 //        startActivity(Intent(this@MainActivity,VideoPlayActivity::class.java))
 
 //        getAccountToken()
@@ -98,9 +99,9 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPageSelected(position: Int) {
-                if (position==banner.realCount)     {
-                    startActivity(Intent(this@MainActivity,VideoPlayActivity::class.java))
-                }
+//                if (position == banner.realCount-1) {
+//                    startActivity(Intent(this@MainActivity, VideoPlayActivity::class.java))
+//                }
 
 
             }
@@ -108,18 +109,27 @@ class MainActivity : AppCompatActivity() {
             override fun onPageScrollStateChanged(state: Int) {
             }
         })
+        //动态注册广播接收器
+        msgReceiver = MsgReceiver()
+        val intentFilter = IntentFilter()
+        intentFilter.addAction("com.zxj.avdproject.RECEIVER")
+        registerReceiver(msgReceiver, intentFilter);
     }
 
     override fun onPause() {
         super.onPause()
+        banner.stop()
     }
 
     override fun onResume() {
         super.onResume()
+        banner.start()
+
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        unregisterReceiver(msgReceiver)
     }
 
     /**
@@ -158,50 +168,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-//    private fun getTestData3(): List<AvdDataBean> {
-//        val list: MutableList<AvdDataBean> = ArrayList()
-//        list.add(
-//            AvdDataBean(
-//                imageUrl = "http://img.zcool.cn/community/013de756fb63036ac7257948747896.jpg",
-//                viewType = 1
-//            )
-//        )
-//        list.add(
-//            AvdDataBean(
-//                imageUrl = "http://img.zcool.cn/community/01639a56fb62ff6ac725794891960d.jpg",
-//                viewType = 1
-//            )
-//        )
-//        list.add(
-//            AvdDataBean(
-//                imageUrl = "http://img.zcool.cn/community/01270156fb62fd6ac72579485aa893.jpg",
-//                viewType = 1
-//            )
-//
-//        )
-//        list.add(
-//            AvdDataBean(
-//                imageUrl = "http://img.zcool.cn/community/01233056fb62fe32f875a9447400e1.jpg",
-//                viewType = 1
-//            )
-//
-//        )
-//        list.add(
-//            AvdDataBean(
-//
-//                videoUrl = "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4",
-//                viewType = 2
-//            )
-//        )
-//        return list
-//    }
-
     //激活
     private fun setStatus() {
-        OkGo.post<String>("${URLS}${ApiUrls.status}").headers("deviceCode",getDeviceCode()).params("status", "1").tag(this)
+        OkGo.post<String>("${URLS}${ApiUrls.status}").headers("deviceCode", getDeviceCode())
+            .params("status", "1").tag(this)
             .execute(object : StringCallback() {
                 override fun onSuccess(response: Response<String>?) {
-                    getAd()
+                    getADList()
                     LogUtils.d(response?.body().toString())
                 }
 
@@ -211,16 +184,22 @@ class MainActivity : AppCompatActivity() {
                 }
             })
     }
-    fun getDeviceCode():String{
-        return SharedPreferencesUtils.getParam(this,
-            DEVICE_CODE,"").toString()
+
+    fun getDeviceCode(): String {
+        return SharedPreferencesUtils.getParam(
+            this,
+            DEVICE_CODE, ""
+        ).toString()
     }
+
     //获取广告列表
-    private fun getAd() {
-        OkGo.get<AdBeans>("${URLS}${ApiUrls.getAd}").headers("deviceCode",getDeviceCode()).tag(this)
+    fun getADList() {
+        OkGo.get<AdBeans>("${URLS}${ApiUrls.getAd}").headers("deviceCode", getDeviceCode())
+            .tag(this)
             .execute(object : JsonCallback<AdBeans>() {
                 override fun onSuccess(response: Response<AdBeans>?) {
                     response?.body()?.payload?.let {
+                        adList.clear()
                         adList.addAll(it)
                         mAdapter.notifyDataSetChanged()
 
@@ -285,22 +264,6 @@ class MainActivity : AppCompatActivity() {
             })
     }
 
-    /**
-     * 上报计数
-     */
-    private fun getIncrease() {
-        OkGo.post<String>("${URLS}${ApiUrls.increase}").params("num", "10").tag(this)
-            .execute(object : StringCallback() {
-                override fun onSuccess(response: Response<String>?) {
-                    LogUtils.d(response?.body().toString())
-                }
-
-                override fun onError(response: Response<String>?) {
-                    super.onError(response)
-                    LogUtils.d(response?.body().toString())
-                }
-            })
-    }
 
     /**
      * 激活机器
@@ -370,7 +333,8 @@ class MainActivity : AppCompatActivity() {
         }
         return super.onKeyDown(keyCode, event)
     }
-//    /**
+
+    //    /**
 //     * 系统类错误，4开头
 //     */
 //    const ERROR_CODE_40000 = 40000;     //系统繁忙
@@ -397,4 +361,10 @@ class MainActivity : AppCompatActivity() {
 //    const ERROR_CODE_50011 = 50011;     //订单状态异常
 //    const ERROR_CODE_50012 = 50012;     //机器未绑定，请在小程序绑定机器
 //    const ERROR_CODE_50013 = 50013;     //设备不在线
+    inner class MsgReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent) {
+            //拿到进度，更新UI
+            getADList()
+        }
+    }
 }
