@@ -1,5 +1,6 @@
 package com.zxj.avdproject.model
 
+
 data class AdBeans(
     val payload: List<Template>,
     val success: Boolean
@@ -19,7 +20,7 @@ data class TemplateBean(
     val imgWidth: Int,
     val sortType: Int,
     val startTime: String,
-    val video: String,
+    var video: String,
     val videoHeight: Int,
     val videoWidth: Int
 )

@@ -31,6 +31,7 @@ class AvdApplication : Application() {
     var callbacks: ActivityLifecycleCallbacks? = null
     override fun onCreate() {
         super.onCreate()
+        mContext=this
         callbacks = ActivityLifecycleCallbackWrapper()
         registerActivityLifecycleCallbacks(callbacks) // 注册Callback
 
@@ -38,14 +39,22 @@ class AvdApplication : Application() {
         initOkGo()
         initUtils()
     }
+
     private var proxy: HttpProxyCacheServer? = null
 
-    companion object{
+
+    companion object {
+        private lateinit var mContext: Context
         fun getProxy(context: Context): HttpProxyCacheServer? {
-            val app = context.applicationContext as  AvdApplication
+            val app = context.applicationContext as AvdApplication
             return if (app.proxy == null) app.newProxy().also({ app.proxy = it }) else app.proxy
         }
+
+        fun getContext(): Context {
+           return mContext
+        }
     }
+
 
     private fun newProxy(): HttpProxyCacheServer? {
         return HttpProxyCacheServer.Builder(this)
@@ -53,14 +62,17 @@ class AvdApplication : Application() {
             .fileNameGenerator(MyFileNameGenerator())
             .build()
     }
+
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
         // 主要是添加下面这句代码
         MultiDex.install(this)
     }
+
     private fun initUtils() {
         PrefHelper.initDefault(this)
     }
+
     private fun initOkGo() {
         //---------这里给出的是示例代码,告诉你可以这么传,实际使用的时候,根据需要传,不需要就不传-------------//
 //        val headers = HttpHeaders()

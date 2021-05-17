@@ -4,12 +4,12 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.serialport.SerialPortFinder
-import android.view.KeyEvent
-import android.view.Window
-import android.view.WindowManager
+import android.view.*
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.lzy.okgo.OkGo
@@ -20,6 +20,7 @@ import com.youth.banner.util.LogUtils
 import com.zxj.avdproject.comn.Device
 import com.zxj.avdproject.comn.SerialPortManager
 import com.zxj.avdproject.comn.message.IMessage
+import com.zxj.avdproject.comn.message.PlayManager
 import com.zxj.avdproject.comn.util.LogPlus
 import com.zxj.avdproject.comn.util.ToastUtil
 import com.zxj.avdproject.model.AdBeans
@@ -34,6 +35,10 @@ import org.greenrobot.eventbus.ThreadMode
 
 const val URLS = "https://api.sczn-ssas.com/api/"
 
+var url = "http://mirror.aarnet.edu.au/pub/TED-talks/911Mothers_2010W-480p.mp4"
+const val START_PLAY_STATUS = 0//播放
+const val STOP_PLAY_STATUS = 1//暂停
+const val ERROR_PLAY_STATUS = 2//出错
 
 class MainActivity : AppCompatActivity() {
 
@@ -48,6 +53,7 @@ class MainActivity : AppCompatActivity() {
         ImageNetAdapter(adList)
     }
 
+
     private val task: Runnable = object : Runnable {
         override fun run() {
             // TODOAuto-generated method stub
@@ -61,6 +67,7 @@ class MainActivity : AppCompatActivity() {
         var mOpened = false
     }
 
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if ((SharedPreferencesUtils.getParam(this, DEVICE_CODE, "") as String).isEmpty()
@@ -71,8 +78,10 @@ class MainActivity : AppCompatActivity() {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.activity_main)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        EventBus.getDefault().register(this)
+
         banner.adapter = mAdapter
-        banner.setLoopTime(3000)
+        banner.setLoopTime(5000)
         setStatus()
 //        getReportError()
 //        getSize()
@@ -82,7 +91,6 @@ class MainActivity : AppCompatActivity() {
         initDevice()
         switchSerialPort()
         startService(Intent(this, MyService::class.java))
-//        startActivity(Intent(this@MainActivity,VideoPlayActivity::class.java))
 
 //        getAccountToken()
 
@@ -90,6 +98,7 @@ class MainActivity : AppCompatActivity() {
         Glide.with(this)
             .load("https://n.sinaimg.cn/tech/transform/324/w149h175/20210423/5868-kpamyii5341282.gif")
             .into(image_gif)
+
         banner.addOnPageChangeListener(object : OnPageChangeListener {
             override fun onPageScrolled(
                 position: Int,
@@ -99,9 +108,6 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPageSelected(position: Int) {
-//                if (position == banner.realCount-1) {
-//                    startActivity(Intent(this@MainActivity, VideoPlayActivity::class.java))
-//                }
 
 
             }
@@ -113,7 +119,7 @@ class MainActivity : AppCompatActivity() {
         msgReceiver = MsgReceiver()
         val intentFilter = IntentFilter()
         intentFilter.addAction("com.zxj.avdproject.RECEIVER")
-        registerReceiver(msgReceiver, intentFilter);
+        registerReceiver(msgReceiver, intentFilter)
     }
 
     override fun onPause() {
@@ -129,6 +135,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        EventBus.getDefault().unregister(this)
         unregisterReceiver(msgReceiver)
     }
 
@@ -316,14 +323,26 @@ class MainActivity : AppCompatActivity() {
         LogPlus.i(message?.message)
     }
 
-    override fun onStart() {
-        super.onStart()
-        EventBus.getDefault().register(this)
-    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onGetPlayManagerEvent(message: PlayManager) {
+        // 收到时间，刷新界面
+        when (message.playType) {
+            START_PLAY_STATUS -> {
+                //播放
+                banner.stop()
+            }
+            STOP_PLAY_STATUS -> {
+                //播放结束
+                banner.start()
 
-    override fun onStop() {
-        super.onStop()
-        EventBus.getDefault().unregister(this)
+            }
+            ERROR_PLAY_STATUS -> {
+                //播放出错
+                banner.start()
+
+
+            }
+        }
     }
 
 
@@ -334,33 +353,6 @@ class MainActivity : AppCompatActivity() {
         return super.onKeyDown(keyCode, event)
     }
 
-    //    /**
-//     * 系统类错误，4开头
-//     */
-//    const ERROR_CODE_40000 = 40000;     //系统繁忙
-//    const ERROR_CODE_40001 = 40001;     //非法操作
-//    const ERROR_CODE_40002 = 40002;     //缺少参数
-//    const ERROR_CODE_40003 = 40003;     //参数异常
-//    const ERROR_CODE_40004 = 40004;     //数据不存在
-//    const ERROR_CODE_40005 = 40005;     //身份认证失败
-//
-//    /**
-//     * 业务类错误，5开头
-//     */
-//    const ERROR_CODE_50000 = 50000;     //用户名或密码错误
-//    const ERROR_CODE_50001 = 50001;     //账户已禁用
-//    const ERROR_CODE_50002 = 50002;     //登录超时
-//    const ERROR_CODE_50003 = 50003;     //手机已注册
-//    const ERROR_CODE_50004 = 50004;     //渠道不存在
-//    const ERROR_CODE_50005 = 50005;     //机器设备异常
-//    const ERROR_CODE_50006 = 50006;     //计量已满
-//    const ERROR_CODE_50007 = 50007;     //无投放广告
-//    const ERROR_CODE_50008 = 50008;     //机器不存在或未激活
-//    const ERROR_CODE_50009 = 50009;     //订单未支付
-//    const ERROR_CODE_50010 = 50010;     //无待出货订单
-//    const ERROR_CODE_50011 = 50011;     //订单状态异常
-//    const ERROR_CODE_50012 = 50012;     //机器未绑定，请在小程序绑定机器
-//    const ERROR_CODE_50013 = 50013;     //设备不在线
     inner class MsgReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             //拿到进度，更新UI

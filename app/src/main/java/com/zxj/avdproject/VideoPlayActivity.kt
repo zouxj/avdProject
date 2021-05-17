@@ -45,7 +45,6 @@ class VideoPlayActivity : AppCompatActivity() {
         } else {
             LogPlus.i("aaaa", "未缓存")
         }
-        LogPlus.i("aaaapath", proxyUrl)
         videoView.setVideoPath(proxyUrl)
         videoView.start()
         videoView.findFocus()

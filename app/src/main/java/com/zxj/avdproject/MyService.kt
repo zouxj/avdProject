@@ -1,12 +1,14 @@
 package com.zxj.avdproject
 
-import android.app.AlarmManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
+import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
+import android.os.Build
 import android.os.IBinder
 import android.os.SystemClock
 import android.text.TextUtils
+import androidx.core.app.NotificationCompat
 import com.lzy.okgo.OkGo
 import com.lzy.okgo.callback.StringCallback
 import com.lzy.okgo.model.Response
@@ -28,6 +30,39 @@ class MyService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+            val ID = "com.example.service1" //这里的id里面输入自己的项目的包的路径
+
+            val NAME = "Channel One"
+            val intent = Intent(this@MyService, MainActivity::class.java)
+            val pendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
+            var notification: NotificationCompat.Builder?=null //创建服务对象
+
+            val manager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel =
+                    NotificationChannel(ID, NAME, NotificationManager.IMPORTANCE_HIGH)
+                channel.enableLights(true)
+                channel.setShowBadge(true)
+                channel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                manager.createNotificationChannel(channel)
+                notification = NotificationCompat.Builder(this@MyService,"").setChannelId(ID)
+            } else {
+                notification = NotificationCompat.Builder(this@MyService)
+            }
+            notification?.setContentTitle("标题")
+                ?.setContentText("内容")
+                ?.setWhen(System.currentTimeMillis())
+                ?.setSmallIcon(R.drawable.ic_launcher)
+                ?.setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.ic_launcher))
+                ?.setContentIntent(pendingIntent)
+                ?.build()
+            val notification1: Notification? = notification?.build()
+
+            startForeground(1,notification1)
+        }
         EventBus.getDefault()?.register(this)
     }
 
