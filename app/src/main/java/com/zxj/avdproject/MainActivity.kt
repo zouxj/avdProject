@@ -4,14 +4,20 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.serialport.SerialPortFinder
-import android.view.*
+import android.view.KeyEvent
+import android.view.Window
+import android.view.WindowManager
+import android.widget.ImageView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.request.target.Target
 import com.lzy.okgo.OkGo
 import com.lzy.okgo.callback.StringCallback
 import com.lzy.okgo.model.Response
@@ -50,7 +56,7 @@ class MainActivity : AppCompatActivity() {
     private var msgReceiver: MsgReceiver? = null
 
     private val mAdapter by lazy {
-        ImageNetAdapter(adList)
+        ImageNetAdapter(this, adList)
     }
 
 
@@ -359,4 +365,5 @@ class MainActivity : AppCompatActivity() {
             getADList()
         }
     }
+
 }
