@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity() {
         EventBus.getDefault().register(this)
 
         banner.adapter = mAdapter
-        banner.setLoopTime(5000)
+        banner.setLoopTime(15000)
         setStatus()
 //        getReportError()
 //        getSize()
@@ -205,6 +205,8 @@ class MainActivity : AppCompatActivity() {
         ).toString()
     }
 
+    var getAdJson = ""
+
     //获取广告列表
     fun getADList() {
         OkGo.get<AdBeans>("${URLS}${ApiUrls.getAd}").headers("deviceCode", getDeviceCode())
@@ -212,9 +214,12 @@ class MainActivity : AppCompatActivity() {
             .execute(object : JsonCallback<AdBeans>() {
                 override fun onSuccess(response: Response<AdBeans>?) {
                     response?.body()?.payload?.let {
-                        adList.clear()
-                        adList.addAll(it)
-                        mAdapter.notifyDataSetChanged()
+                        if (getAdJson != response.body().toString()) {
+                            adList.clear()
+                            adList.addAll(it)
+                            mAdapter.notifyDataSetChanged()
+                        }
+                        getAdJson = response.body().toString()
 
                     }
 

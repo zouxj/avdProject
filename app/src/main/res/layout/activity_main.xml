@@ -17,7 +17,6 @@
     <ImageView
         android:scaleType="fitXY"
         android:id="@+id/image_gif"
-        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="250dp"
         tools:ignore="MissingConstraints" />

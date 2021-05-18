@@ -61,9 +61,13 @@ class ImageNetAdapter(val context: Context, mDatas: List<Template>) :
                         Glide.with(holder.itemView).load(R.drawable.loading)
                     )
                     .into(it1)
-                loadCover(it.thumbImg,data?.template?.video,context)
                 if (data?.template?.video?.length ?: 0 > 0) {
-                    mAppVideoView.addVideoView(it.mVideoView!!, data?.template?.video!!,it.thumbImg)
+                    loadCover(it.thumbImg, data?.template?.video, context)
+                    mAppVideoView.addVideoView(
+                        it.mVideoView!!,
+                        data?.template?.video!!,
+                        it.thumbImg
+                    )
                 } else {
                     it.mVideoView?.removeAllViews()
                     mAppVideoView.mVideoView.stopPlayback()
@@ -75,7 +79,7 @@ class ImageNetAdapter(val context: Context, mDatas: List<Template>) :
     }
 
     class AppVideoView {
-
+        var mThumImg: ImageView? = null
         val mVideoView = object : VideoView(AvdApplication.getContext()) {
             override fun onMeasure(
                 widthMeasureSpec: Int,
@@ -87,29 +91,34 @@ class ImageNetAdapter(val context: Context, mDatas: List<Template>) :
                 ) else super.onMeasure(widthMeasureSpec, heightMeasureSpec)
             }
         }
-        var mVideoUrl: String? = null
 
-        fun addVideoView(fl: FrameLayout, videoUrl: String,thumImg:ImageView?) {
-            mVideoUrl = videoUrl
-            fl.removeAllViews()
+        init {
             mVideoView.setOnPreparedListener {
                 mVideoView.start()
                 //准备好了
-                thumImg?.visibility=View.GONE
+                mThumImg?.visibility = View.GONE
                 EventBus.getDefault().post(PlayManager(START_PLAY_STATUS))
             }
             mVideoView.setOnCompletionListener {
                 //播完了
-                thumImg?.visibility=View.VISIBLE
+                mThumImg?.visibility = View.VISIBLE
                 EventBus.getDefault().post(PlayManager(STOP_PLAY_STATUS))
 
             }
             mVideoView.setOnErrorListener { mp, what, extra ->
                 //播放出错
-                thumImg?.visibility=View.VISIBLE
+                mThumImg?.visibility = View.VISIBLE
                 EventBus.getDefault().post(PlayManager(ERROR_PLAY_STATUS))
                 false
             }
+        }
+
+        var mVideoUrl: String? = null
+
+        fun addVideoView(fl: FrameLayout, videoUrl: String, thumImg: ImageView?) {
+            mVideoUrl = videoUrl
+            mThumImg = thumImg
+            fl.removeAllViews()
             val params = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
@@ -160,7 +169,7 @@ class ImageNetAdapter(val context: Context, mDatas: List<Template>) :
         context: Context?
     ) {
         imageView?.let {
-            it.visibility=View.VISIBLE
+            it.visibility = View.VISIBLE
             it.scaleType = ImageView.ScaleType.CENTER_CROP
             Glide.with(context!!)
                 .setDefaultRequestOptions(
