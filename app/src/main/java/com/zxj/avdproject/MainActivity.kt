@@ -73,7 +73,6 @@ class MainActivity : AppCompatActivity() {
         var mOpened = false
     }
 
-    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if ((SharedPreferencesUtils.getParam(this, DEVICE_CODE, "") as String).isEmpty()
@@ -85,7 +84,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         EventBus.getDefault().register(this)
-
         banner.adapter = mAdapter
         banner.setLoopTime(15000)
         setStatus()

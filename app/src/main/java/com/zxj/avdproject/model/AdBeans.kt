@@ -15,7 +15,7 @@ data class Template(
     val adId: Int,
     val adName: String,
     val template: TemplateBean,
-    val viewType:Int=1
+    val viewType: Int = 1
 
 ) {
     override fun toString(): String {
@@ -24,18 +24,20 @@ data class Template(
 }
 
 data class TemplateBean(
-    val endTime: String,
-    val img: String,
-    val imgHeight: Int,
-    val imgWidth: Int,
-    val sortType: Int,
-    val startTime: String,
-    var video: String,
-    val videoHeight: Int,
-    val videoWidth: Int
+    val screenNum: Int = 0,
+    val sortType: Int = 0,
+    val height: Int = 0,
+    val width: Int = 0,
+    val topHeight: Int = 0,
+    val middleHeight: Int = 0,
+    val bottomHeight: Int = 0,
+    val top: String? = null,
+    val middle: String? = null,
+    val bottom: String? = null,
+    val startTime: String? = null,
+    val endTime: String? = null
 
-) {
-    override fun toString(): String {
-        return "TemplateBean(endTime='$endTime', img='$img', imgHeight=$imgHeight, imgWidth=$imgWidth, sortType=$sortType, startTime='$startTime', video='$video', videoHeight=$videoHeight, videoWidth=$videoWidth)"
-    }
+    ) {
+
+
 }
