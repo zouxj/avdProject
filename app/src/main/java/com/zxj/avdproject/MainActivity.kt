@@ -4,20 +4,16 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.drawable.Drawable
-import android.os.Build
+import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.os.Bundle
 import android.os.Handler
 import android.serialport.SerialPortFinder
 import android.view.KeyEvent
 import android.view.Window
 import android.view.WindowManager
-import android.widget.ImageView
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestOptions
-import com.bumptech.glide.request.target.Target
 import com.lzy.okgo.OkGo
 import com.lzy.okgo.callback.StringCallback
 import com.lzy.okgo.model.Response
@@ -32,8 +28,10 @@ import com.zxj.avdproject.comn.util.ToastUtil
 import com.zxj.avdproject.model.AdBeans
 import com.zxj.avdproject.model.Template
 import com.zxj.avdproject.ui.LoginActivity
+import com.zxj.avdproject.uitls.QRCodeUtil
 import com.zxj.avdproject.uitls.SharedPreferencesUtils
 import com.zxj.avdproject.uitls.SharedPreferencesUtils.DEVICE_CODE
+import com.zxj.avdproject.uitls.SharedPreferencesUtils.deviceQrcode
 import kotlinx.android.synthetic.main.activity_main.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -41,7 +39,6 @@ import org.greenrobot.eventbus.ThreadMode
 
 const val URLS = "https://api.sczn-ssas.com/api/"
 
-var url = "http://mirror.aarnet.edu.au/pub/TED-talks/911Mothers_2010W-480p.mp4"
 const val START_PLAY_STATUS = 0//播放
 const val STOP_PLAY_STATUS = 1//暂停
 const val ERROR_PLAY_STATUS = 2//出错
@@ -85,7 +82,7 @@ class MainActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         EventBus.getDefault().register(this)
         banner.adapter = mAdapter
-        banner.setLoopTime(15000)
+        banner.setLoopTime(5000)
         setStatus()
 //        getReportError()
 //        getSize()
@@ -98,10 +95,12 @@ class MainActivity : AppCompatActivity() {
 
 //        getAccountToken()
 
-        handler.postDelayed(task, 30000);//延迟调用
-        Glide.with(this)
-            .load("https://n.sinaimg.cn/tech/transform/324/w149h175/20210423/5868-kpamyii5341282.gif")
-            .into(image_gif)
+        handler.postDelayed(task, 30000);//延
+        Glide.with(this).asGif().load(R.drawable.ad).into(image_gif)// 迟调用
+        img_core.setImageBitmap(QRCodeUtil.createQRCode(SharedPreferencesUtils.getParam(this,deviceQrcode,"没有支付二维码").toString()))
+//        Glide.with(this)
+//            .load("https://n.sinaimg.cn/tech/transform/324/w149h175/20210423/5868-kpamyii5341282.gif")
+//            .into(image_gif)
 
         banner.addOnPageChangeListener(object : OnPageChangeListener {
             override fun onPageScrolled(
@@ -112,7 +111,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPageSelected(position: Int) {
-
+                LogPlus.i("")
 
             }
 
@@ -367,6 +366,26 @@ class MainActivity : AppCompatActivity() {
             //拿到进度，更新UI
             getADList()
         }
+    }
+
+    /**
+     * @param 图片缩放
+     * @param bitmap 对象
+     * @param w 要缩放的宽度
+     * @param h 要缩放的高度
+     * @return newBmp 新 Bitmap对象
+     */
+    fun zoomBitmap(bitmap: Bitmap, w: Int, h: Int): Bitmap? {
+        val width: Int = bitmap.getWidth()
+        val height: Int = bitmap.getHeight()
+        val matrix = Matrix()
+        val scaleWidth = w.toFloat() / width
+        val scaleHeight = h.toFloat() / height
+        matrix.postScale(scaleWidth, scaleHeight)
+        return Bitmap.createBitmap(
+            bitmap, 0, 0, width, height,
+            matrix, true
+        )
     }
 
 }

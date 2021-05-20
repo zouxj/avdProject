@@ -5,10 +5,9 @@ import android.graphics.Color
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
-import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.VideoView
@@ -23,9 +22,13 @@ import com.youth.banner.util.BannerUtils.getView
 import com.zxj.avdproject.comn.message.PlayManager
 import com.zxj.avdproject.comn.util.LogPlus
 import com.zxj.avdproject.model.Template
+import com.zxj.avdproject.uitls.SSlUtiles
+import com.zxj.avdproject.uitls.SSlUtiles.TrustAllHostnameVerifier
 import com.zxj.avdproject.uitls.defaultDisplay
 import com.zxj.avdproject.uitls.dip2px
+import com.zxj.avdproject.widgt.FullScreenVideoView
 import org.greenrobot.eventbus.EventBus
+import javax.net.ssl.HttpsURLConnection
 
 
 /**
@@ -36,9 +39,9 @@ class ImageNetAdapter(val context: Context, mDatas: List<Template>) :
     BannerAdapter<Template, RecyclerView.ViewHolder>(mDatas), LifecycleEventObserver {
 
     private val mAppVideoView: AppVideoView by lazy {
-        AppVideoView()
+        AppVideoView(context)
     }
-
+    private  val videoFour=   AppVideoView(context)
     private val widthApp by lazy {
         context.defaultDisplay().widthPixels
     }
@@ -78,8 +81,9 @@ class ImageNetAdapter(val context: Context, mDatas: List<Template>) :
                     )
                     lp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
                     val img = ImageView(context).apply {
-                        scaleType=ImageView.ScaleType.FIT_XY
+                        scaleType = ImageView.ScaleType.FIT_XY
                     }
+                    it.top?.let { it1 -> loadImg(img, it1) }
                     fl.addView(img, lp)
                 }
                 2 -> {
@@ -89,11 +93,8 @@ class ImageNetAdapter(val context: Context, mDatas: List<Template>) :
                         RelativeLayout.LayoutParams.MATCH_PARENT
                     )
                     it.top?.let { url ->
-                        if (mAppVideoView.mVideoView.parent != null) {
-                            (mAppVideoView.mVideoView.parent as ViewGroup).removeView(mAppVideoView.mVideoView)
-                        }
-                        fl.addView(mAppVideoView.mVideoView, lp)
-                        mAppVideoView.mVideoView.setVideoURI(Uri.parse(url))
+                        mAppVideoView.addVideoPlay(fl,lp,url)
+
                     }
 
                 }
@@ -105,60 +106,49 @@ class ImageNetAdapter(val context: Context, mDatas: List<Template>) :
                     )
                     lpTop.addRule(RelativeLayout.ALIGN_PARENT_TOP)
                     val img = ImageView(context).apply {
-                        scaleType=ImageView.ScaleType.FIT_XY
+                        scaleType = ImageView.ScaleType.FIT_XY
                     }
-                    Glide.with(fl)
-                        .load(it.top)
-                        .thumbnail(
-                            Glide.with(fl).load(R.drawable.loading)
-                        )
-                        .into(img)
+                    it.top?.let { it1 -> loadImg(img, it1) }
+
                     fl.addView(img, lpTop)
                     //视频
                     val lpBottom = RelativeLayout.LayoutParams(
                         widthApp,
-                        context.dip2px(it.middleHeight.toFloat())
+                        context.dip2px(it.bottomHeight.toFloat())
                     )
                     lpBottom.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
-                    it.middle?.let { url ->
-                        if (mAppVideoView.mVideoView.parent != null) {
-                            (mAppVideoView.mVideoView.parent as ViewGroup).removeView(mAppVideoView.mVideoView)
-                        }
-                        fl.addView(mAppVideoView.mVideoView, lpBottom)
-                        mAppVideoView.mVideoView.setVideoURI(Uri.parse(url))
+                    it.bottom?.let { url ->
+                        mAppVideoView.addVideoPlay(fl,lpBottom,url)
                     }
 
                 }
                 4 -> {
                     //视频加图片
                     //视频
-                    val lpTop = RelativeLayout.LayoutParams(
+                    val lp = RelativeLayout.LayoutParams(
                         widthApp,
                         context.dip2px(it.topHeight.toFloat())
                     )
-                    lpTop.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
-                    it.middle?.let { url ->
-                        if (mAppVideoView.mVideoView.parent != null) {
-                            (mAppVideoView.mVideoView.parent as ViewGroup).removeView(mAppVideoView.mVideoView)
-                        }
-                        fl.addView(mAppVideoView.mVideoView, lpTop)
-                        mAppVideoView.mVideoView.setVideoURI(Uri.parse(url))
+//                    val video= FullScreenVideoView(context)
+//                    video.setVideoURI(Uri.parse( it.top))
+//                    fl.addView(video, lp)
+//                    video.setOnPreparedListener {
+//                        video.start()
+//                    }
+
+                    it.top?.let { url ->
+                        videoFour.addVideoPlay(fl,lp,url)
                     }
-                    //图片
+//                    图片
                     val lpBottom = RelativeLayout.LayoutParams(
                         widthApp,
-                        context.dip2px(it.middleHeight.toFloat())
+                        context.dip2px(it.bottomHeight.toFloat())
                     )
-                    lpTop.addRule(RelativeLayout.ALIGN_PARENT_TOP)
+                    lpBottom.setMargins(0,it.topHeight,0,0)
                     val img = ImageView(context).apply {
-                        scaleType=ImageView.ScaleType.FIT_XY
+                        scaleType = ImageView.ScaleType.FIT_XY
                     }
-                    Glide.with(fl)
-                        .load(it.top)
-                        .thumbnail(
-                            Glide.with(fl).load(R.drawable.loading)
-                        )
-                        .into(img)
+                    it.bottom?.let { it1 -> loadImg(img, it1) }
                     fl.addView(img, lpBottom)
 
                 }
@@ -170,27 +160,20 @@ class ImageNetAdapter(val context: Context, mDatas: List<Template>) :
                     )
                     lpTop.addRule(RelativeLayout.ALIGN_PARENT_TOP)
                     val imgTop = ImageView(context).apply {
-                        scaleType=ImageView.ScaleType.FIT_XY
+                        scaleType = ImageView.ScaleType.FIT_XY
                     }
-                    Glide.with(fl)
-                        .load(it.top)
-                        .thumbnail(
-                            Glide.with(fl).load(R.drawable.loading)
-                        )
-                        .into(imgTop)
+                    it.top?.let { it1 -> loadImg(imgTop, it1) }
                     fl.addView(imgTop, lpTop)
                     //视频
                     val lpMiddle = RelativeLayout.LayoutParams(
                         widthApp,
                         context.dip2px(it.middleHeight.toFloat())
                     )
-                    lpMiddle.setMargins(0, context.dip2px(it.middleHeight.toFloat()), 0, 0)
+
+                    lpMiddle.setMargins(0, context.dip2px(it.topHeight.toFloat()), 0, 0)
                     it.middle?.let { url ->
-                        if (mAppVideoView.mVideoView.parent != null) {
-                            (mAppVideoView.mVideoView.parent as ViewGroup).removeView(mAppVideoView.mVideoView)
-                        }
-                        fl.addView(mAppVideoView.mVideoView, lpMiddle)
-                        mAppVideoView.mVideoView.setVideoURI(Uri.parse(url))
+                        mAppVideoView.addVideoPlay(fl,lpMiddle,url)
+
                     }
                     //图片
                     val lpBottom = RelativeLayout.LayoutParams(
@@ -199,14 +182,9 @@ class ImageNetAdapter(val context: Context, mDatas: List<Template>) :
                     )
                     lpBottom.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
                     val imgBottom = ImageView(context).apply {
-                        scaleType=ImageView.ScaleType.FIT_XY
+                        scaleType = ImageView.ScaleType.FIT_XY
                     }
-                    Glide.with(fl)
-                        .load(it.top)
-                        .thumbnail(
-                            Glide.with(fl).load(R.drawable.loading)
-                        )
-                        .into(imgBottom)
+                    it.bottom?.let { it1 -> loadImg(imgBottom, it1) }
                     fl.addView(imgBottom, lpBottom)
                 }
 
@@ -217,69 +195,77 @@ class ImageNetAdapter(val context: Context, mDatas: List<Template>) :
         }
     }
 
-    class AppVideoView {
-        private var mThumImg: ImageView? = null
-        val mVideoView = object : VideoView(AvdApplication.getContext()) {
-
+    class AppVideoView constructor(val context: Context) {
+        var mVideoUrl:String?=null
+        val mVideoFl: View by lazy {
+                LayoutInflater.from(context).inflate(R.layout.video_view, null, false)
         }
 
+        private  val mThumImg :ImageView by lazy {
+            mVideoFl.findViewById<ImageView>(R.id.img_video)
+        }
+        val mVideoView: VideoView by lazy {
+            mVideoFl.findViewById<VideoView>(R.id.video)
+        }
+      fun  addVideoPlay(fl: RelativeLayout,lp:RelativeLayout.LayoutParams,url: String){
+          mVideoUrl=null
+          if (mVideoFl.parent != null) {
+              (mVideoFl.parent as ViewGroup).removeView(mVideoFl)
+          }
+          loadCover(mThumImg,url,context)
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+              mVideoView.setOnInfoListener { _: MediaPlayer?, what: Int, _: Int ->
+                  //播放第一帧
+                  if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) mVideoView?.setBackgroundColor(
+                      Color.TRANSPARENT
+                  )
+                  true
+              }
+          }
+
+          mVideoView.stopPlayback()
+          mVideoView.setVideoURI(Uri.parse(url))
+          fl.addView(mVideoFl, lp)
+        }
         init {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                mVideoView.setOnInfoListener { _: MediaPlayer?, what: Int, _: Int ->
-                    //播放第一帧
-                    if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) mVideoView.setBackgroundColor(
-                        Color.TRANSPARENT
-                    )
-                    true
-                }
-            }
             mVideoView.setOnPreparedListener {
                 mVideoView.start()
                 //准备好了
-                mThumImg?.visibility = View.GONE
+                mThumImg.visibility = View.GONE
                 EventBus.getDefault().post(PlayManager(START_PLAY_STATUS))
             }
             mVideoView.setOnCompletionListener {
                 //播完了
-                mThumImg?.visibility = View.VISIBLE
+                mThumImg.visibility = View.VISIBLE
                 EventBus.getDefault().post(PlayManager(STOP_PLAY_STATUS))
 
             }
             mVideoView.setOnErrorListener { mp, what, extra ->
                 //播放出错
-                mThumImg?.visibility = View.VISIBLE
+                mThumImg.visibility = View.VISIBLE
                 EventBus.getDefault().post(PlayManager(ERROR_PLAY_STATUS))
                 false
             }
         }
 
-        var mVideoUrl: String? = null
-
-        fun addVideoView(fl: RelativeLayout, videoUrl: String, thumImg: ImageView?) {
-            mVideoUrl = videoUrl
-            mThumImg = thumImg
-            val params = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            params.gravity = Gravity.CENTER
-            if (mVideoView.parent != null) {
-                (mVideoView.parent as ViewGroup).removeView(mVideoView)
-            }
-            fl.addView(mVideoView, params)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                mVideoView.setOnInfoListener { _: MediaPlayer?, what: Int, _: Int ->
-                    //播放第一帧
-                    if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) mVideoView.setBackgroundColor(
-                        Color.TRANSPARENT
+        fun loadCover(
+            imageView: ImageView?,
+            url: String?,
+            context: Context?
+        ) {
+            imageView?.let {
+                it.visibility = View.VISIBLE
+                it.scaleType = ImageView.ScaleType.CENTER_CROP
+                Glide.with(context!!)
+                    .setDefaultRequestOptions(
+                        RequestOptions()
+                            .frame(1000000)
+                            .centerCrop()
                     )
-                    true
-                }
+                    .load(url).into(it)
             }
-            mVideoView.setVideoURI(Uri.parse(videoUrl))
-
-
         }
+
 
     }
 
@@ -298,25 +284,17 @@ class ImageNetAdapter(val context: Context, mDatas: List<Template>) :
                 }
             }
 
+            else -> {}
         }
         LogPlus.i("onStateChanged", "event===>" + event)
     }
-
-    fun loadCover(
-        imageView: ImageView?,
-        url: String?,
-        context: Context?
-    ) {
-        imageView?.let {
-            it.visibility = View.VISIBLE
-            it.scaleType = ImageView.ScaleType.CENTER_CROP
-            Glide.with(context!!)
-                .setDefaultRequestOptions(
-                    RequestOptions()
-                        .frame(1000000)
-                        .centerCrop()
-                )
-                .load(url).into(it)
-        }
+    private fun loadImg(img:ImageView, imgUrl:String){
+        Glide.with(context)
+            .load(imgUrl)
+            .thumbnail(
+                Glide.with(context).load(R.drawable.loading)
+            )
+            .into(img)
     }
+
 }

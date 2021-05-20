@@ -11,6 +11,8 @@ import android.content.Context
  */
 object SharedPreferencesUtils {
     val DEVICE_CODE="deviceCode"
+    val deviceQrcode="deviceQrcode"
+
     /**
      * 保存在手机里面的文件名
      */
