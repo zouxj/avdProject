@@ -17,7 +17,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <ImageView
+        <com.zxj.avdproject.widgt.FullScreenVideoView
             android:scaleType="fitXY"
             android:id="@+id/image_gif"
             android:layout_width="match_parent"

@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.serialport.SerialPortFinder
@@ -13,7 +14,6 @@ import android.view.KeyEvent
 import android.view.Window
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
-import com.bumptech.glide.Glide
 import com.lzy.okgo.OkGo
 import com.lzy.okgo.callback.StringCallback
 import com.lzy.okgo.model.Response
@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         EventBus.getDefault().register(this)
         banner.adapter = mAdapter
-        banner.setLoopTime(5000)
+        banner.setLoopTime(15000)
         setStatus()
 //        getReportError()
 //        getSize()
@@ -92,11 +92,21 @@ class MainActivity : AppCompatActivity() {
         initDevice()
         switchSerialPort()
         startService(Intent(this, MyService::class.java))
-
 //        getAccountToken()
-
         handler.postDelayed(task, 30000);//延
-        Glide.with(this).asGif().load(R.drawable.ad).into(image_gif)// 迟调用
+        val path = "android.resource://" + packageName + "/" + R.raw.bottom_ad
+        image_gif.setVideoPath(path)
+        image_gif.setOnPreparedListener {
+            image_gif.start()
+        }
+        image_gif.setOnErrorListener { mp, what, extra ->
+            image_gif.start()
+            true
+        }
+        image_gif.setOnCompletionListener {
+            image_gif.start()
+        }
+//        Glide.with(this).asGif().load(R.drawable.ad).into(image_gif)// 迟调用
         img_core.setImageBitmap(QRCodeUtil.createQRCode(SharedPreferencesUtils.getParam(this,deviceQrcode,"没有支付二维码").toString()))
 //        Glide.with(this)
 //            .load("https://n.sinaimg.cn/tech/transform/324/w149h175/20210423/5868-kpamyii5341282.gif")
