@@ -8,6 +8,7 @@ import com.licheedev.hwutils.ByteUtil;
 import com.zxj.avdproject.comn.message.LogManager;
 import com.zxj.avdproject.comn.message.SendMessage;
 import com.zxj.avdproject.comn.util.LogPlus;
+import com.zxj.avdproject.comn.util.ToastUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -158,10 +159,7 @@ public class SerialPortManager {
      * 发送命令包
      */
     public void sendCommand(final String command) {
-
-        // TODO: 2018/3/22  
         LogPlus.i("发送命令：" + command);
-
         byte[] bytes = ByteUtil.hexStr2bytes(command);
         rxSendData(bytes).subscribeOn(mSendScheduler).subscribe(new Observer<Object>() {
             @Override

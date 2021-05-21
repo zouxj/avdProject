@@ -97,17 +97,27 @@ class MainActivity : AppCompatActivity() {
         val path = "android.resource://" + packageName + "/" + R.raw.bottom_ad
         image_gif.setVideoPath(path)
         image_gif.setOnPreparedListener {
-            image_gif.start()
+            it.start()
+            it.isLooping=true
         }
         image_gif.setOnErrorListener { mp, what, extra ->
             image_gif.start()
             true
         }
         image_gif.setOnCompletionListener {
+            image_gif.setVideoPath(path)
             image_gif.start()
         }
 //        Glide.with(this).asGif().load(R.drawable.ad).into(image_gif)// 迟调用
-        img_core.setImageBitmap(QRCodeUtil.createQRCode(SharedPreferencesUtils.getParam(this,deviceQrcode,"没有支付二维码").toString()))
+        img_core.setImageBitmap(
+            QRCodeUtil.createQRCode(
+                SharedPreferencesUtils.getParam(
+                    this,
+                    deviceQrcode,
+                    "没有支付二维码"
+                ).toString()
+            )
+        )
 //        Glide.with(this)
 //            .load("https://n.sinaimg.cn/tech/transform/324/w149h175/20210423/5868-kpamyii5341282.gif")
 //            .into(image_gif)
@@ -351,6 +361,11 @@ class MainActivity : AppCompatActivity() {
             }
             STOP_PLAY_STATUS -> {
                 //播放结束
+                var current=banner.currentItem+1
+                if (banner.currentItem == banner.realCount - 1) {
+                    current=0
+                }
+                banner.currentItem = current
                 banner.start()
 
             }
@@ -370,19 +385,20 @@ class MainActivity : AppCompatActivity() {
         }
         return super.onKeyDown(keyCode, event)
     }
-    var test=0
+
+    var test = 0
+
     inner class MsgReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             //拿到进度，更新UI
             test++
-            if (test>=10000){
-                ToastUtil.showOne(this@MainActivity,"请续费")
+            if (test >= 10000) {
+                ToastUtil.showOne(this@MainActivity, "请续费")
                 finish()
             }
             getADList()
         }
     }
-
 
 
 }

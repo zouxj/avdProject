@@ -40,7 +40,7 @@ public class ToastUtil {
 //
 //            mToastRef = new WeakReference<>(toast);
 //        }
-        Toast.makeText(context,text,Toast.LENGTH_SHORT).show();
+        Toast.makeText(context,text,Toast.LENGTH_LONG).show();
     }
 
 

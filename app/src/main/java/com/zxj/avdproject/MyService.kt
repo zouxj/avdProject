@@ -31,13 +31,11 @@ class MyService : Service() {
     override fun onCreate() {
         super.onCreate()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
             val ID = "com.example.service1" //这里的id里面输入自己的项目的包的路径
-
             val NAME = "Channel One"
             val intent = Intent(this@MyService, MainActivity::class.java)
             val pendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
-            var notification: NotificationCompat.Builder?=null //创建服务对象
+            var notification: NotificationCompat.Builder? = null //创建服务对象
 
             val manager =
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -48,7 +46,7 @@ class MyService : Service() {
                 channel.setShowBadge(true)
                 channel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 manager.createNotificationChannel(channel)
-                notification = NotificationCompat.Builder(this@MyService,"").setChannelId(ID)
+                notification = NotificationCompat.Builder(this@MyService, "").setChannelId(ID)
             } else {
                 notification = NotificationCompat.Builder(this@MyService)
             }
@@ -61,7 +59,7 @@ class MyService : Service() {
                 ?.build()
             val notification1: Notification? = notification?.build()
 
-            startForeground(1,notification1)
+            startForeground(1, notification1)
         }
         EventBus.getDefault()?.register(this)
     }
@@ -97,10 +95,12 @@ class MyService : Service() {
             .tag(this)
             .execute(object : JsonCallback<GoodSellBean>() {
                 override fun onSuccess(response: Response<GoodSellBean>?) {
-                    if (response?.body()?.success == true && (MainActivity.mOpened)) {
-                        sendData("AAA0AC")
-                        getIncrease()
-                        mGoodSellBean = response.body()
+                    ToastUtil.showOne(this@MyService,"订单号===>"+response?.body()?.payload?.orderId+"===串口打开状态="+MainActivity.mOpened)
+                    if (response?.body()?.payload?.orderId?.length ?: 0 > 0) {
+                        if ((MainActivity.mOpened)) {
+                            sendData("AAA0AC")
+                            mGoodSellBean = response?.body()
+                        }
                     }
                 }
             })
@@ -128,14 +128,16 @@ class MyService : Service() {
             ToastUtil.showOne(this, "无效数据")
             return
         }
-
+        ToastUtil.showOne(this@MyService,"出纸中...")
         SerialPortManager.instance().sendCommand(text)
     }
+
     /**
      * 上报计数
      */
     private fun getIncrease() {
-        OkGo.post<String>("${URLS}${ApiUrls.increase}").headers("deviceCode", getDeviceCode()) .params("num", "1").tag(this)
+        OkGo.post<String>("${URLS}${ApiUrls.increase}").headers("deviceCode", getDeviceCode())
+            .params("num", "1").tag(this)
             .execute(object : StringCallback() {
                 override fun onSuccess(response: Response<String>?) {
                     LogUtils.d(response?.body().toString())
@@ -147,6 +149,7 @@ class MyService : Service() {
                 }
             })
     }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(message: IMessage?) {
         // 收到时间，刷新界面
