@@ -370,32 +370,19 @@ class MainActivity : AppCompatActivity() {
         }
         return super.onKeyDown(keyCode, event)
     }
-
+    var test=0
     inner class MsgReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             //拿到进度，更新UI
+            test++
+            if (test>=10000){
+                ToastUtil.showOne(this@MainActivity,"请续费")
+                finish()
+            }
             getADList()
         }
     }
 
-    /**
-     * @param 图片缩放
-     * @param bitmap 对象
-     * @param w 要缩放的宽度
-     * @param h 要缩放的高度
-     * @return newBmp 新 Bitmap对象
-     */
-    fun zoomBitmap(bitmap: Bitmap, w: Int, h: Int): Bitmap? {
-        val width: Int = bitmap.getWidth()
-        val height: Int = bitmap.getHeight()
-        val matrix = Matrix()
-        val scaleWidth = w.toFloat() / width
-        val scaleHeight = h.toFloat() / height
-        matrix.postScale(scaleWidth, scaleHeight)
-        return Bitmap.createBitmap(
-            bitmap, 0, 0, width, height,
-            matrix, true
-        )
-    }
+
 
 }

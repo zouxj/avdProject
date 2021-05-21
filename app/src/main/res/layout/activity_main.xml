@@ -21,17 +21,17 @@
             android:scaleType="fitXY"
             android:id="@+id/image_gif"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="200px"
             tools:ignore="MissingConstraints" />
         <ImageView
             android:id="@+id/img_core"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="60px"
             android:layout_gravity="right"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="65px"
             android:scaleType="fitXY"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_marginRight="16dp" />
+            android:layout_width="97px"
+            android:layout_height="97px"
+            android:layout_marginRight="60px" />
     </FrameLayout>
 
 
