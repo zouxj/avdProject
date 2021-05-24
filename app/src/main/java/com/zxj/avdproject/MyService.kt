@@ -25,7 +25,7 @@ import org.greenrobot.eventbus.ThreadMode
 
 
 class MyService : Service() {
-    private val anHour = 10 * 1000 // 10s更新一次
+    private val anHour = 15 * 1000 // 10s更新一次
     private val mIntent = Intent("com.zxj.avdproject.RECEIVER")
 
     override fun onCreate() {
@@ -88,27 +88,32 @@ class MyService : Service() {
 
         return super.onStartCommand(intent, flags, startId)
     }
-
+    var count=0
     var mGoodSellBean: GoodSellBean? = null
     private fun getGoods() {
         OkGo.get<GoodSellBean>("${URLS}${ApiUrls.goods}").headers("deviceCode", getDeviceCode())
             .tag(this)
             .execute(object : JsonCallback<GoodSellBean>() {
                 override fun onSuccess(response: Response<GoodSellBean>?) {
-                    ToastUtil.showOne(this@MyService,"订单号===>"+response?.body()?.payload?.orderId+"===串口打开状态="+MainActivity.mOpened)
+                    ToastUtil.showOne(
+                        this@MyService,
+                        "订单号===>" + response?.body()?.payload?.orderId + "===串口打开状态=" + MainActivity.mOpened
+                    )
                     if (response?.body()?.payload?.orderId?.length ?: 0 > 0) {
+                        mGoodSellBean = response?.body()
+                        setSell(2)
                         if ((MainActivity.mOpened)) {
                             sendData("AAA0AC")
-                            mGoodSellBean = response?.body()
                         }
                     }
                 }
             })
     }
 
-    private fun setSell() {
+    private fun setSell(outStatus: Int) {
         OkGo.post<String>("${URLS}${ApiUrls.sell}").headers("deviceCode", getDeviceCode())
-            .params("orderId", mGoodSellBean?.payload?.orderId).tag(this)
+            .params("orderId", mGoodSellBean?.payload?.orderId).params("outStatus", outStatus)
+            .tag(this)
             .execute(object : StringCallback() {
                 override fun onSuccess(response: Response<String>?) {
 
@@ -128,7 +133,7 @@ class MyService : Service() {
             ToastUtil.showOne(this, "无效数据")
             return
         }
-        ToastUtil.showOne(this@MyService,"出纸中...")
+        ToastUtil.showOne(this@MyService, "出纸中...")
         SerialPortManager.instance().sendCommand(text)
     }
 
@@ -153,8 +158,21 @@ class MyService : Service() {
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(message: IMessage?) {
         // 收到时间，刷新界面
-        setSell()
-        getIncrease()
+        when (message?.message) {
+            "AAA1AC" -> {
+                //出纸完成
+                setSell(1)
+            }
+            "AAA2AC" -> {
+                //缺纸
+                setSell(2)
+            }
+            "AAA3AC" -> {
+                //出纸失败
+                setSell(3)
+            }
+        }
+
         LogPlus.i(message?.message)
     }
 }

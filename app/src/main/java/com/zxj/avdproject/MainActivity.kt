@@ -345,11 +345,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onMessageEvent(message: IMessage?) {
-        // 收到时间，刷新界面
-        LogPlus.i(message?.message)
-    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onGetPlayManagerEvent(message: PlayManager) {
