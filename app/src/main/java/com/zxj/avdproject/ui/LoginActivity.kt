@@ -4,19 +4,15 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.KeyEvent
-import com.bumptech.glide.Glide
 import com.lzy.okgo.OkGo
-import com.lzy.okgo.callback.StringCallback
 import com.lzy.okgo.model.Response
 import com.youth.banner.util.LogUtils
 import com.zxj.avdproject.*
 import com.zxj.avdproject.comn.util.ToastUtil
 import com.zxj.avdproject.model.QrCodeBean
-import com.zxj.avdproject.uitls.QRCodeUtil
 import com.zxj.avdproject.uitls.SharedPreferencesUtils
 import com.zxj.avdproject.uitls.SharedPreferencesUtils.DEVICE_CODE
 import com.zxj.avdproject.uitls.SharedPreferencesUtils.deviceQrcode
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_register.*
 
 class LoginActivity : AppCompatActivity() {

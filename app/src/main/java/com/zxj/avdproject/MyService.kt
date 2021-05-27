@@ -12,7 +12,6 @@ import androidx.core.app.NotificationCompat
 import com.lzy.okgo.OkGo
 import com.lzy.okgo.callback.StringCallback
 import com.lzy.okgo.model.Response
-import com.youth.banner.util.LogUtils
 import com.zxj.avdproject.comn.SerialPortManager
 import com.zxj.avdproject.comn.message.IMessage
 import com.zxj.avdproject.comn.util.LogPlus
@@ -25,7 +24,7 @@ import org.greenrobot.eventbus.ThreadMode
 
 
 class MyService : Service() {
-    private val anHour = 15 * 1000 // 10s更新一次
+    private val anHour = 15 * 1000 // 15s更新一次
     private val mIntent = Intent("com.zxj.avdproject.RECEIVER")
 
     override fun onCreate() {
@@ -88,7 +87,6 @@ class MyService : Service() {
 
         return super.onStartCommand(intent, flags, startId)
     }
-    var count=0
     var mGoodSellBean: GoodSellBean? = null
     private fun getGoods() {
         OkGo.get<GoodSellBean>("${URLS}${ApiUrls.goods}").headers("deviceCode", getDeviceCode())
@@ -99,12 +97,10 @@ class MyService : Service() {
                         this@MyService,
                         "订单号===>" + response?.body()?.payload?.orderId + "===串口打开状态=" + MainActivity.mOpened
                     )
-                    if (response?.body()?.payload?.orderId?.length ?: 0 > 0) {
+                    if (response?.body()?.payload?.orderId?.length ?: 0 > 0&&(MainActivity.mOpened)) {
                         mGoodSellBean = response?.body()
-                        setSell(2)
-                        if ((MainActivity.mOpened)) {
-                            sendData("AAA0AC")
-                        }
+                        sendData("AAA0AC")
+
                     }
                 }
             })
@@ -136,25 +132,6 @@ class MyService : Service() {
         ToastUtil.showOne(this@MyService, "出纸中...")
         SerialPortManager.instance().sendCommand(text)
     }
-
-    /**
-     * 上报计数
-     */
-    private fun getIncrease() {
-        OkGo.post<String>("${URLS}${ApiUrls.increase}").headers("deviceCode", getDeviceCode())
-            .params("num", "1").tag(this)
-            .execute(object : StringCallback() {
-                override fun onSuccess(response: Response<String>?) {
-                    LogUtils.d(response?.body().toString())
-                }
-
-                override fun onError(response: Response<String>?) {
-                    super.onError(response)
-                    LogUtils.d(response?.body().toString())
-                }
-            })
-    }
-
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(message: IMessage?) {
         // 收到时间，刷新界面

@@ -5,6 +5,7 @@ package com.zxj.avdproject;
  * @data: 1/11/21 2:31 PM
  * @Version: 1.0.0
  */
+
 public interface ApiUrls {
 
     //    /**
@@ -56,5 +57,6 @@ public interface ApiUrls {
     String register="device/register";
     //设置已经出货
     String sell= "device/sell";
-
+    //二维码
+    String qrCode= "device/qrCode";
 }

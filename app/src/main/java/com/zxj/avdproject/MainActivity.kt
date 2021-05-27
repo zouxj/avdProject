@@ -4,9 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Bitmap
-import android.graphics.Matrix
-import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.serialport.SerialPortFinder
@@ -21,11 +18,11 @@ import com.youth.banner.listener.OnPageChangeListener
 import com.youth.banner.util.LogUtils
 import com.zxj.avdproject.comn.Device
 import com.zxj.avdproject.comn.SerialPortManager
-import com.zxj.avdproject.comn.message.IMessage
 import com.zxj.avdproject.comn.message.PlayManager
 import com.zxj.avdproject.comn.util.LogPlus
 import com.zxj.avdproject.comn.util.ToastUtil
 import com.zxj.avdproject.model.AdBeans
+import com.zxj.avdproject.model.QrCodeBean
 import com.zxj.avdproject.model.Template
 import com.zxj.avdproject.ui.LoginActivity
 import com.zxj.avdproject.uitls.QRCodeUtil
@@ -92,13 +89,12 @@ class MainActivity : AppCompatActivity() {
         initDevice()
         switchSerialPort()
         startService(Intent(this, MyService::class.java))
-//        getAccountToken()
         handler.postDelayed(task, 30000);//延
         val path = "android.resource://" + packageName + "/" + R.raw.bottom_ad
         image_gif.setVideoPath(path)
         image_gif.setOnPreparedListener {
             it.start()
-            it.isLooping=true
+            it.isLooping = true
         }
         image_gif.setOnErrorListener { mp, what, extra ->
             image_gif.start()
@@ -108,20 +104,6 @@ class MainActivity : AppCompatActivity() {
             image_gif.setVideoPath(path)
             image_gif.start()
         }
-//        Glide.with(this).asGif().load(R.drawable.ad).into(image_gif)// 迟调用
-        img_core.setImageBitmap(
-            QRCodeUtil.createQRCode(
-                SharedPreferencesUtils.getParam(
-                    this,
-                    deviceQrcode,
-                    "没有支付二维码"
-                ).toString()
-            )
-        )
-//        Glide.with(this)
-//            .load("https://n.sinaimg.cn/tech/transform/324/w149h175/20210423/5868-kpamyii5341282.gif")
-//            .into(image_gif)
-
         banner.addOnPageChangeListener(object : OnPageChangeListener {
             override fun onPageScrolled(
                 position: Int,
@@ -205,6 +187,7 @@ class MainActivity : AppCompatActivity() {
             .execute(object : StringCallback() {
                 override fun onSuccess(response: Response<String>?) {
                     getADList()
+                    getQrCode()
                     LogUtils.d(response?.body().toString())
                 }
 
@@ -212,6 +195,38 @@ class MainActivity : AppCompatActivity() {
                     super.onError(response)
                     LogUtils.d(response?.body().toString())
                 }
+            })
+    }
+
+    /**
+     * 获取支付二维码
+     */
+    fun getQrCode() {
+        OkGo.get<QrCodeBean>("${URLS}${ApiUrls.qrCode}").headers("deviceCode", getDeviceCode())
+            .tag(this)
+            .execute(object : JsonCallback<QrCodeBean>() {
+                override fun onSuccess(response: Response<QrCodeBean>?) {
+                    response?.body()?.payload?.qrCode?.let {
+                        if (it != SharedPreferencesUtils.getParam(
+                                this@MainActivity,
+                                deviceQrcode,
+                                ""
+                            )
+                        ) {
+                            SharedPreferencesUtils.setParam(this@MainActivity, deviceQrcode, it)
+                        }
+                    }
+                    img_core.setImageBitmap(
+                        QRCodeUtil.createQRCode(
+                            SharedPreferencesUtils.getParam(
+                                this@MainActivity,
+                                deviceQrcode,
+                                "没有支付二维码"
+                            ).toString()
+                        )
+                    )
+                }
+
             })
     }
 
@@ -356,9 +371,9 @@ class MainActivity : AppCompatActivity() {
             }
             STOP_PLAY_STATUS -> {
                 //播放结束
-                var current=banner.currentItem+1
+                var current = banner.currentItem + 1
                 if (banner.currentItem == banner.realCount - 1) {
-                    current=0
+                    current = 0
                 }
                 banner.currentItem = current
                 banner.start()
