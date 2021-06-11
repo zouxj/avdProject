@@ -45,7 +45,6 @@ public class SystemHelper {
         if (!isRunningForeground(context)) {
             /**获取ActivityManager*/
             ActivityManager activityManager = (ActivityManager) context.getSystemService(ACTIVITY_SERVICE);
-
             /**获得当前运行的task(任务)*/
             List<ActivityManager.RunningTaskInfo> taskInfoList = activityManager.getRunningTasks(100);
             for (ActivityManager.RunningTaskInfo taskInfo : taskInfoList) {

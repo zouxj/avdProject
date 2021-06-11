@@ -93,10 +93,6 @@ class MyService : Service() {
             .tag(this)
             .execute(object : JsonCallback<GoodSellBean>() {
                 override fun onSuccess(response: Response<GoodSellBean>?) {
-                    ToastUtil.showOne(
-                        this@MyService,
-                        "订单号===>" + response?.body()?.payload?.orderId + "===串口打开状态=" + MainActivity.mOpened
-                    )
                     if (response?.body()?.payload?.orderId?.length ?: 0 > 0&&(MainActivity.mOpened)) {
                         mGoodSellBean = response?.body()
                         sendData("AAA0AC")

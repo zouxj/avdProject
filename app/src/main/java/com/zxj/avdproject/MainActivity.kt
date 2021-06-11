@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         override fun run() {
             // TODOAuto-generated method stub
             SystemHelper.setTopApp(this@MainActivity)
-            handler.postDelayed(this, 30 * 1000) //设置延迟时间，此处是5秒
+            handler.postDelayed(this, 60 * 1000) //设置延迟时间，此处是5秒
             //需要执行的代码
         }
     }
@@ -81,15 +81,10 @@ class MainActivity : AppCompatActivity() {
         banner.adapter = mAdapter
         banner.setLoopTime(15000)
         setStatus()
-//        getReportError()
-//        getSize()
-//        getActive()
-//        getIncrease()
-//        getResetNum()
         initDevice()
         switchSerialPort()
         startService(Intent(this, MyService::class.java))
-        handler.postDelayed(task, 30000);//延
+        handler.postDelayed(task, 60 * 1000)
         val path = "android.resource://" + packageName + "/" + R.raw.bottom_ad
         image_gif.setVideoPath(path)
         image_gif.setOnPreparedListener {
@@ -407,6 +402,7 @@ class MainActivity : AppCompatActivity() {
                 finish()
             }
             getADList()
+//            ToastUtil.showOne(this@MainActivity,"串口===>${mDevices?.getOrNull(mDeviceIndex)}")
         }
     }
 

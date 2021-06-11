@@ -50,9 +50,6 @@ class AvdApplication : Application() {
             return if (app.proxy == null) app.newProxy().also({ app.proxy = it }) else app.proxy
         }
 
-        fun getContext(): Context {
-           return mContext
-        }
     }
 
 
