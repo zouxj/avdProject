@@ -17,21 +17,22 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <com.zxj.avdproject.widgt.FullScreenVideoView
+        <ImageView
             android:scaleType="fitXY"
             android:id="@+id/image_gif"
             android:layout_width="match_parent"
             android:layout_height="200px"
             tools:ignore="MissingConstraints" />
+
         <ImageView
             android:id="@+id/img_core"
-            android:layout_marginEnd="60px"
-            android:layout_gravity="right"
-            android:layout_marginTop="65px"
+            android:layout_gravity="top"
+            android:layout_marginStart="27px"
+            android:layout_marginTop="52px"
             android:scaleType="fitXY"
-            android:layout_width="97px"
-            android:layout_height="97px"
-            android:layout_marginRight="60px" />
+            android:layout_width="120px"
+            android:layout_height="120px"
+            android:layout_marginLeft="27px" />
     </FrameLayout>
 
 

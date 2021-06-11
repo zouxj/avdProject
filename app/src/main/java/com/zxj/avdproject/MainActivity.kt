@@ -11,6 +11,7 @@ import android.view.KeyEvent
 import android.view.Window
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.lzy.okgo.OkGo
 import com.lzy.okgo.callback.StringCallback
 import com.lzy.okgo.model.Response
@@ -85,20 +86,22 @@ class MainActivity : AppCompatActivity() {
         switchSerialPort()
         startService(Intent(this, MyService::class.java))
         handler.postDelayed(task, 60 * 1000)
-        val path = "android.resource://" + packageName + "/" + R.raw.bottom_ad
-        image_gif.setVideoPath(path)
-        image_gif.setOnPreparedListener {
-            it.start()
-            it.isLooping = true
-        }
-        image_gif.setOnErrorListener { mp, what, extra ->
-            image_gif.start()
-            true
-        }
-        image_gif.setOnCompletionListener {
-            image_gif.setVideoPath(path)
-            image_gif.start()
-        }
+        val path = "android.resource://" + packageName + "/" + R.raw.bottom_avd
+        Glide.with(this).asGif().load(path).into(image_gif);
+
+//        image_gif.setVideoPath(path)
+//        image_gif.setOnPreparedListener {
+//            it.start()
+//            it.isLooping = true
+//        }
+//        image_gif.setOnErrorListener { mp, what, extra ->
+//            image_gif.start()
+//            true
+//        }
+//        image_gif.setOnCompletionListener {
+//            image_gif.setVideoPath(path)
+//            image_gif.start()
+//        }
         banner.addOnPageChangeListener(object : OnPageChangeListener {
             override fun onPageScrolled(
                 position: Int,
